@@ -8,8 +8,10 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { toast } from "@/components/ui/sonner";
 import type { GameState, GameMode, Player } from "@/types/game";
 import { findBestMove } from "@/utils/computerMove";
+import Confetti from "./Confetti";
 
 const createPlayers = (mode: GameMode, playerCount: number): Player[] => {
   if (mode === "computer") {
@@ -42,6 +44,8 @@ const TicTacToe = () => {
     boardSize: 3,
     playerCount: 2
   });
+
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     const boardSize = getBoardSize(gameState.playerCount);
@@ -122,6 +126,18 @@ const TicTacToe = () => {
       isDraw
     }));
 
+    if (winner) {
+      setShowConfetti(true);
+      toast(`🎉 ${winner} wins! 🎉`, {
+        description: "Congratulations on your victory!",
+        duration: 5000,
+      });
+
+      setTimeout(() => {
+        setShowConfetti(false);
+      }, 6000);
+    }
+
     if (!winner && !isDraw && gameState.gameMode === "computer") {
       setTimeout(() => {
         const updatedSquares = [...squares];
@@ -137,7 +153,26 @@ const TicTacToe = () => {
           winner: newWinner,
           isDraw: newIsDraw
         }));
+
+        if (newWinner) {
+          setShowConfetti(true);
+          toast(`🎉 ${newWinner} wins! 🎉`, {
+            description: "The computer celebrates its victory!",
+            duration: 5000,
+          });
+
+          setTimeout(() => {
+            setShowConfetti(false);
+          }, 6000);
+        }
       }, 500);
+    }
+
+    if (isDraw) {
+      toast("Game Draw!", {
+        description: "It's a tie! Try again.",
+        duration: 5000,
+      });
     }
   };
 
@@ -150,16 +185,17 @@ const TicTacToe = () => {
     const playerCount = newMode === "computer" ? 2 : gameState.playerCount;
     const boardSize = getBoardSize(playerCount);
     
-    setGameState({
+    setGameState(prev => ({
+      ...prev,
+      playerCount,
+      boardSize,
       squares: Array(boardSize * boardSize).fill(null),
-      currentPlayerIndex: 0,
-      gameMode: newMode,
       players: createPlayers(newMode, playerCount),
       winner: null,
       isDraw: false,
-      boardSize,
-      playerCount
-    });
+      currentPlayerIndex: 0,
+      gameMode: newMode
+    }));
   };
 
   const changePlayerCount = (count: string) => {
@@ -203,6 +239,8 @@ const TicTacToe = () => {
   
   return (
     <div className="flex flex-col items-center justify-center space-y-8">
+      <Confetti active={showConfetti} />
+      
       <div className="flex flex-col md:flex-row items-center gap-4">
         <Button
           onClick={toggleGameMode}
