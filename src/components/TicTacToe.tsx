@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Users } from "lucide-react";
@@ -28,7 +27,6 @@ const createPlayers = (mode: GameMode, playerCount: number): Player[] => {
   }
 };
 
-// Determine board size based on player count
 const getBoardSize = (playerCount: number): number => {
   return playerCount <= 2 ? 3 : 4; // 3x3 for 2 players, 4x4 for 3-4 players
 };
@@ -45,7 +43,6 @@ const TicTacToe = () => {
     playerCount: 2
   });
 
-  // Update board when player count changes
   useEffect(() => {
     const boardSize = getBoardSize(gameState.playerCount);
     const totalSquares = boardSize * boardSize;
@@ -64,7 +61,6 @@ const TicTacToe = () => {
     const size = gameState.boardSize;
     const lines: number[][] = [];
     
-    // Rows
     for (let i = 0; i < size; i++) {
       const row: number[] = [];
       for (let j = 0; j < size; j++) {
@@ -73,7 +69,6 @@ const TicTacToe = () => {
       lines.push(row);
     }
     
-    // Columns
     for (let i = 0; i < size; i++) {
       const column: number[] = [];
       for (let j = 0; j < size; j++) {
@@ -82,7 +77,6 @@ const TicTacToe = () => {
       lines.push(column);
     }
     
-    // Diagonals
     const diagonal1: number[] = [];
     const diagonal2: number[] = [];
     for (let i = 0; i < size; i++) {
@@ -128,7 +122,6 @@ const TicTacToe = () => {
       isDraw
     }));
 
-    // Computer's turn
     if (!winner && !isDraw && gameState.gameMode === "computer") {
       setTimeout(() => {
         const updatedSquares = [...squares];
@@ -149,6 +142,10 @@ const TicTacToe = () => {
   };
 
   const toggleGameMode = () => {
+    if (gameState.playerCount > 2 && gameState.gameMode === "multiplayer") {
+      return;
+    }
+    
     const newMode: GameMode = gameState.gameMode === "computer" ? "multiplayer" : "computer";
     const playerCount = newMode === "computer" ? 2 : gameState.playerCount;
     const boardSize = getBoardSize(playerCount);
@@ -169,15 +166,18 @@ const TicTacToe = () => {
     const playerCount = parseInt(count);
     const boardSize = getBoardSize(playerCount);
     
+    const gameMode = playerCount > 2 ? "multiplayer" : gameState.gameMode;
+    
     setGameState(prev => ({
       ...prev,
       playerCount,
       boardSize,
       squares: Array(boardSize * boardSize).fill(null),
-      players: createPlayers(prev.gameMode, playerCount),
+      players: createPlayers(gameMode, playerCount),
       winner: null,
       isDraw: false,
-      currentPlayerIndex: 0
+      currentPlayerIndex: 0,
+      gameMode
     }));
   };
 
@@ -197,7 +197,6 @@ const TicTacToe = () => {
     ? "Game Draw!"
     : `Next player: ${gameState.players[gameState.currentPlayerIndex].name} (${gameState.players[gameState.currentPlayerIndex].symbol})`;
 
-  // Calculate dynamic tile size based on board size
   const tileSize = gameState.boardSize === 3 
     ? "w-20 h-20 sm:w-24 sm:h-24" 
     : "w-16 h-16 sm:w-20 sm:h-20";
@@ -209,9 +208,16 @@ const TicTacToe = () => {
           onClick={toggleGameMode}
           variant="outline"
           className="flex items-center space-x-2"
+          disabled={gameState.playerCount > 2}
         >
           <Users className="h-4 w-4" />
-          <span>{gameState.gameMode === "computer" ? "Switch to Multiplayer" : "Switch to Computer Mode"}</span>
+          <span>
+            {gameState.playerCount > 2 
+              ? "Computer mode unavailable (2 players only)" 
+              : gameState.gameMode === "computer" 
+                ? "Switch to Multiplayer" 
+                : "Switch to Computer Mode"}
+          </span>
         </Button>
         
         {gameState.gameMode === "multiplayer" && (
