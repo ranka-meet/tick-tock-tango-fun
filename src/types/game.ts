@@ -15,4 +15,6 @@ export type GameState = {
   players: Player[];
   winner: string | null;
   isDraw: boolean;
+  boardSize: number; // Number of cells per side (3x3, 4x4, etc)
+  playerCount: number; // Number of players (2-4)
 };

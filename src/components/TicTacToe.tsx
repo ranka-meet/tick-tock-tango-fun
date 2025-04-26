@@ -1,22 +1,36 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Users } from "lucide-react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import type { GameState, GameMode, Player } from "@/types/game";
 import { findBestMove } from "@/utils/computerMove";
 
-const createPlayers = (mode: GameMode): Player[] => {
-  return mode === "computer" 
-    ? [
-        { id: 1, symbol: "X", name: "You" },
-        { id: 2, symbol: "O", name: "Computer", isComputer: true }
-      ]
-    : [
-        { id: 1, symbol: "X", name: "Player 1" },
-        { id: 2, symbol: "O", name: "Player 2" },
-        { id: 3, symbol: "△", name: "Player 3" },
-        { id: 4, symbol: "□", name: "Player 4" }
-      ];
+const createPlayers = (mode: GameMode, playerCount: number): Player[] => {
+  if (mode === "computer") {
+    return [
+      { id: 1, symbol: "X", name: "You" },
+      { id: 2, symbol: "O", name: "Computer", isComputer: true }
+    ];
+  } else {
+    const symbols = ["X", "O", "△", "□"];
+    return Array.from({ length: playerCount }, (_, index) => ({
+      id: index + 1,
+      symbol: symbols[index],
+      name: `Player ${index + 1}`
+    }));
+  }
+};
+
+// Determine board size based on player count
+const getBoardSize = (playerCount: number): number => {
+  return playerCount <= 2 ? 3 : 4; // 3x3 for 2 players, 4x4 for 3-4 players
 };
 
 const TicTacToe = () => {
@@ -24,24 +38,77 @@ const TicTacToe = () => {
     squares: Array(9).fill(null),
     currentPlayerIndex: 0,
     gameMode: "multiplayer",
-    players: createPlayers("multiplayer"),
+    players: createPlayers("multiplayer", 2),
     winner: null,
-    isDraw: false
+    isDraw: false,
+    boardSize: 3,
+    playerCount: 2
   });
 
-  const calculateWinner = (squares: (string | null)[]): string | null => {
-    const lines = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8],
-      [0, 3, 6], [1, 4, 7], [2, 5, 8],
-      [0, 4, 8], [2, 4, 6]
-    ];
+  // Update board when player count changes
+  useEffect(() => {
+    const boardSize = getBoardSize(gameState.playerCount);
+    const totalSquares = boardSize * boardSize;
+    
+    setGameState(prev => ({
+      ...prev,
+      boardSize,
+      squares: Array(totalSquares).fill(null),
+      winner: null,
+      isDraw: false,
+      currentPlayerIndex: 0
+    }));
+  }, [gameState.playerCount]);
 
-    for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i];
-      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a];
+  const calculateWinner = (squares: (string | null)[]): string | null => {
+    const size = gameState.boardSize;
+    const lines: number[][] = [];
+    
+    // Rows
+    for (let i = 0; i < size; i++) {
+      const row: number[] = [];
+      for (let j = 0; j < size; j++) {
+        row.push(i * size + j);
+      }
+      lines.push(row);
+    }
+    
+    // Columns
+    for (let i = 0; i < size; i++) {
+      const column: number[] = [];
+      for (let j = 0; j < size; j++) {
+        column.push(j * size + i);
+      }
+      lines.push(column);
+    }
+    
+    // Diagonals
+    const diagonal1: number[] = [];
+    const diagonal2: number[] = [];
+    for (let i = 0; i < size; i++) {
+      diagonal1.push(i * size + i);
+      diagonal2.push(i * size + (size - 1 - i));
+    }
+    lines.push(diagonal1);
+    lines.push(diagonal2);
+
+    for (const line of lines) {
+      const firstSymbol = squares[line[0]];
+      if (!firstSymbol) continue;
+      
+      let isWinningLine = true;
+      for (let i = 1; i < line.length; i++) {
+        if (squares[line[i]] !== firstSymbol) {
+          isWinningLine = false;
+          break;
+        }
+      }
+      
+      if (isWinningLine) {
+        return firstSymbol;
       }
     }
+    
     return null;
   };
 
@@ -64,14 +131,15 @@ const TicTacToe = () => {
     // Computer's turn
     if (!winner && !isDraw && gameState.gameMode === "computer") {
       setTimeout(() => {
-        const computerMove = findBestMove(squares);
-        squares[computerMove] = "O";
-        const newWinner = calculateWinner(squares);
-        const newIsDraw = !newWinner && squares.every(square => square !== null);
+        const updatedSquares = [...squares];
+        const computerMove = findBestMove(updatedSquares);
+        updatedSquares[computerMove] = "O";
+        const newWinner = calculateWinner(updatedSquares);
+        const newIsDraw = !newWinner && updatedSquares.every(square => square !== null);
         
         setGameState(prev => ({
           ...prev,
-          squares,
+          squares: updatedSquares,
           currentPlayerIndex: 0,
           winner: newWinner,
           isDraw: newIsDraw
@@ -82,20 +150,41 @@ const TicTacToe = () => {
 
   const toggleGameMode = () => {
     const newMode: GameMode = gameState.gameMode === "computer" ? "multiplayer" : "computer";
+    const playerCount = newMode === "computer" ? 2 : gameState.playerCount;
+    const boardSize = getBoardSize(playerCount);
+    
     setGameState({
-      squares: Array(9).fill(null),
+      squares: Array(boardSize * boardSize).fill(null),
       currentPlayerIndex: 0,
       gameMode: newMode,
-      players: createPlayers(newMode),
+      players: createPlayers(newMode, playerCount),
       winner: null,
-      isDraw: false
+      isDraw: false,
+      boardSize,
+      playerCount
     });
+  };
+
+  const changePlayerCount = (count: string) => {
+    const playerCount = parseInt(count);
+    const boardSize = getBoardSize(playerCount);
+    
+    setGameState(prev => ({
+      ...prev,
+      playerCount,
+      boardSize,
+      squares: Array(boardSize * boardSize).fill(null),
+      players: createPlayers(prev.gameMode, playerCount),
+      winner: null,
+      isDraw: false,
+      currentPlayerIndex: 0
+    }));
   };
 
   const resetGame = () => {
     setGameState(prev => ({
       ...prev,
-      squares: Array(9).fill(null),
+      squares: Array(prev.boardSize * prev.boardSize).fill(null),
       currentPlayerIndex: 0,
       winner: null,
       isDraw: false
@@ -108,9 +197,14 @@ const TicTacToe = () => {
     ? "Game Draw!"
     : `Next player: ${gameState.players[gameState.currentPlayerIndex].name} (${gameState.players[gameState.currentPlayerIndex].symbol})`;
 
+  // Calculate dynamic tile size based on board size
+  const tileSize = gameState.boardSize === 3 
+    ? "w-20 h-20 sm:w-24 sm:h-24" 
+    : "w-16 h-16 sm:w-20 sm:h-20";
+  
   return (
     <div className="flex flex-col items-center justify-center space-y-8">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row items-center gap-4">
         <Button
           onClick={toggleGameMode}
           variant="outline"
@@ -119,16 +213,41 @@ const TicTacToe = () => {
           <Users className="h-4 w-4" />
           <span>{gameState.gameMode === "computer" ? "Switch to Multiplayer" : "Switch to Computer Mode"}</span>
         </Button>
+        
+        {gameState.gameMode === "multiplayer" && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Players:</span>
+            <Select 
+              value={gameState.playerCount.toString()} 
+              onValueChange={changePlayerCount}
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="Players" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2">2 Players</SelectItem>
+                <SelectItem value="3">3 Players</SelectItem>
+                <SelectItem value="4">4 Players</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
       
       <div className="text-2xl font-semibold text-gray-700">{status}</div>
       
-      <div className="grid grid-cols-3 gap-2 bg-white p-4 rounded-lg shadow-lg">
+      <div 
+        className={`grid gap-2 bg-white p-4 rounded-lg shadow-lg`}
+        style={{ 
+          gridTemplateColumns: `repeat(${gameState.boardSize}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${gameState.boardSize}, minmax(0, 1fr))`
+        }}
+      >
         {gameState.squares.map((square, i) => (
           <button
             key={i}
-            className={`w-20 h-20 sm:w-24 sm:h-24 text-4xl font-bold rounded-lg focus:outline-none transition-all transform hover:scale-105
-              ${!square ? 'hover:bg-gray-50 shadow-sm' : 'bg-gray-100'}
+            className={`${tileSize} text-4xl font-bold rounded-lg focus:outline-none transition-all transform hover:scale-105
+              ${!square ? 'hover:bg-gray-50' : 'bg-gray-100'}
               ${square ? `
                 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]
                 before:absolute
