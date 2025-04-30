@@ -42,7 +42,8 @@ const TicTacToe = () => {
     winner: null,
     isDraw: false,
     boardSize: 3,
-    playerCount: 2
+    playerCount: 2,
+    winningLine: []
   });
 
   const [showConfetti, setShowConfetti] = useState(false);
@@ -57,7 +58,8 @@ const TicTacToe = () => {
       squares: Array(totalSquares).fill(null),
       winner: null,
       isDraw: false,
-      currentPlayerIndex: 0
+      currentPlayerIndex: 0,
+      winningLine: []
     }));
   }, [gameState.playerCount]);
 
@@ -76,7 +78,7 @@ const TicTacToe = () => {
     };
   }, [gameState.winner, gameState.isDraw]);
 
-  const calculateWinner = (squares: (string | null)[]): string | null => {
+  const calculateWinner = (squares: (string | null)[]): { winner: string | null, winningLine: number[] } => {
     const size = gameState.boardSize;
     const lines: number[][] = [];
     
@@ -118,19 +120,19 @@ const TicTacToe = () => {
       }
       
       if (isWinningLine) {
-        return firstSymbol;
+        return { winner: firstSymbol, winningLine: line };
       }
     }
     
-    return null;
+    return { winner: null, winningLine: [] };
   };
 
   const handleClick = (i: number) => {
     const squares = gameState.squares.slice();
-    if (calculateWinner(squares) || squares[i]) return;
+    if (gameState.winner || squares[i]) return;
 
     squares[i] = gameState.players[gameState.currentPlayerIndex].symbol;
-    const winner = calculateWinner(squares);
+    const { winner, winningLine } = calculateWinner(squares);
     const isDraw = !winner && squares.every(square => square !== null);
 
     setGameState(prev => ({
@@ -138,7 +140,8 @@ const TicTacToe = () => {
       squares,
       currentPlayerIndex: (prev.currentPlayerIndex + 1) % prev.players.length,
       winner,
-      isDraw
+      isDraw,
+      winningLine: winningLine
     }));
 
     if (winner) {
@@ -158,7 +161,9 @@ const TicTacToe = () => {
         const updatedSquares = [...squares];
         const computerMove = findBestMove(updatedSquares);
         updatedSquares[computerMove] = "O";
-        const newWinner = calculateWinner(updatedSquares);
+        const result = calculateWinner(updatedSquares);
+        const newWinner = result.winner;
+        const newWinningLine = result.winningLine;
         const newIsDraw = !newWinner && updatedSquares.every(square => square !== null);
         
         setGameState(prev => ({
@@ -166,7 +171,8 @@ const TicTacToe = () => {
           squares: updatedSquares,
           currentPlayerIndex: 0,
           winner: newWinner,
-          isDraw: newIsDraw
+          isDraw: newIsDraw,
+          winningLine: newWinningLine
         }));
 
         if (newWinner) {
@@ -209,7 +215,8 @@ const TicTacToe = () => {
       winner: null,
       isDraw: false,
       currentPlayerIndex: 0,
-      gameMode: newMode
+      gameMode: newMode,
+      winningLine: []
     }));
   };
 
@@ -228,7 +235,8 @@ const TicTacToe = () => {
       winner: null,
       isDraw: false,
       currentPlayerIndex: 0,
-      gameMode
+      gameMode,
+      winningLine: []
     }));
   };
 
@@ -238,7 +246,8 @@ const TicTacToe = () => {
       squares: Array(prev.boardSize * prev.boardSize).fill(null),
       currentPlayerIndex: 0,
       winner: null,
-      isDraw: false
+      isDraw: false,
+      winningLine: []
     }));
   };
 
@@ -304,33 +313,39 @@ const TicTacToe = () => {
           gridTemplateRows: `repeat(${gameState.boardSize}, minmax(0, 1fr))`
         }}
       >
-        {gameState.squares.map((square, i) => (
-          <button
-            key={i}
-            className={`${tileSize} text-4xl font-bold rounded-lg focus:outline-none transition-all transform hover:scale-105
-              ${!square ? 'bg-white hover:bg-gray-50 shadow-md' : 'bg-white shadow-inner'}
-              relative overflow-hidden
-              ${square ? `
-                shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]
-                before:absolute
-                before:inset-0
-                before:z-[-1]
-                before:transform
-                before:translate-y-[2px]
-                before:rounded-lg
-                before:bg-gray-200
-              ` : ''}
-              ${square === 'X' ? 'text-indigo-700 bg-indigo-50' : 
-                square === 'O' ? 'text-purple-700 bg-purple-50' : 
-                square === '△' ? 'text-green-700 bg-green-50' : 
-                square === '□' ? 'text-orange-700 bg-orange-50' : ''
-              }`}
-            onClick={() => handleClick(i)}
-            disabled={gameState.winner !== null || Boolean(square)}
-          >
-            {square}
-          </button>
-        ))}
+        {gameState.squares.map((square, i) => {
+          const isWinningTile = gameState.winningLine.includes(i);
+          
+          return (
+            <button
+              key={i}
+              className={`${tileSize} text-4xl font-bold rounded-lg focus:outline-none transition-all transform hover:scale-105
+                ${!square ? 'bg-white hover:bg-gray-50 shadow-md' : 'bg-white shadow-inner'}
+                ${isWinningTile ? 'bg-green-200 hover:bg-green-200' : ''}
+                relative overflow-hidden
+                ${square ? `
+                  shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]
+                  before:absolute
+                  before:inset-0
+                  before:z-[-1]
+                  before:transform
+                  before:translate-y-[2px]
+                  before:rounded-lg
+                  before:bg-gray-200
+                ` : ''}
+                ${square === 'X' ? 'text-indigo-700 bg-indigo-50' : 
+                  square === 'O' ? 'text-purple-700 bg-purple-50' : 
+                  square === '△' ? 'text-green-700 bg-green-50' : 
+                  square === '□' ? 'text-orange-700 bg-orange-50' : ''
+                }
+                ${isWinningTile ? 'animate-pulse bg-green-300' : ''}`}
+              onClick={() => handleClick(i)}
+              disabled={gameState.winner !== null || Boolean(square)}
+            >
+              {square}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

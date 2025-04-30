@@ -17,4 +17,5 @@ export type GameState = {
   isDraw: boolean;
   boardSize: number; // Number of cells per side (3x3, 4x4, etc)
   playerCount: number; // Number of players (2-4)
+  winningLine: number[]; // Indices of the winning line squares
 };
