@@ -1,6 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { RefreshCw, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -60,6 +60,21 @@ const TicTacToe = () => {
       currentPlayerIndex: 0
     }));
   }, [gameState.playerCount]);
+
+  // Add automatic reset timer effect when game ends
+  useEffect(() => {
+    let resetTimeout: number;
+    
+    if (gameState.winner || gameState.isDraw) {
+      resetTimeout = window.setTimeout(() => {
+        resetGame();
+      }, 3000); // Reset after 3 seconds
+    }
+    
+    return () => {
+      clearTimeout(resetTimeout);
+    };
+  }, [gameState.winner, gameState.isDraw]);
 
   const calculateWinner = (squares: (string | null)[]): string | null => {
     const size = gameState.boardSize;
@@ -129,8 +144,8 @@ const TicTacToe = () => {
     if (winner) {
       setShowConfetti(true);
       toast(`🎉 ${winner} wins! 🎉`, {
-        description: "Congratulations on your victory!",
-        duration: 5000,
+        description: "Congratulations on your victory! Game will restart in 3 seconds.",
+        duration: 3000,
       });
 
       setTimeout(() => {
@@ -157,8 +172,8 @@ const TicTacToe = () => {
         if (newWinner) {
           setShowConfetti(true);
           toast(`🎉 ${newWinner} wins! 🎉`, {
-            description: "The computer celebrates its victory!",
-            duration: 5000,
+            description: "The computer celebrates its victory! Game will restart in 3 seconds.",
+            duration: 3000,
           });
 
           setTimeout(() => {
@@ -170,8 +185,8 @@ const TicTacToe = () => {
 
     if (isDraw) {
       toast("Game Draw!", {
-        description: "It's a tie! Try again.",
-        duration: 5000,
+        description: "It's a tie! Game will restart in 3 seconds.",
+        duration: 3000,
       });
     }
   };
@@ -242,11 +257,13 @@ const TicTacToe = () => {
       <Confetti active={showConfetti} />
       
       <div className="flex flex-col md:flex-row items-center gap-4">
-        <Button
+        <button
           onClick={toggleGameMode}
-          variant="outline"
-          className="flex items-center space-x-2"
           disabled={gameState.playerCount > 2}
+          className={`px-4 py-2 rounded-md flex items-center space-x-2 transition-colors
+            ${gameState.playerCount > 2 
+              ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+              : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300'}`}
         >
           <Users className="h-4 w-4" />
           <span>
@@ -256,7 +273,7 @@ const TicTacToe = () => {
                 ? "Switch to Multiplayer" 
                 : "Switch to Computer Mode"}
           </span>
-        </Button>
+        </button>
         
         {gameState.gameMode === "multiplayer" && (
           <div className="flex items-center gap-2">
@@ -281,7 +298,7 @@ const TicTacToe = () => {
       <div className="text-2xl font-semibold text-gray-700">{status}</div>
       
       <div 
-        className={`grid gap-2 bg-white p-4 rounded-lg shadow-lg`}
+        className={`grid gap-2 bg-gray-100 p-4 rounded-lg shadow-lg`}
         style={{ 
           gridTemplateColumns: `repeat(${gameState.boardSize}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${gameState.boardSize}, minmax(0, 1fr))`
@@ -291,9 +308,10 @@ const TicTacToe = () => {
           <button
             key={i}
             className={`${tileSize} text-4xl font-bold rounded-lg focus:outline-none transition-all transform hover:scale-105
-              ${!square ? 'hover:bg-gray-50' : 'bg-gray-100'}
+              ${!square ? 'bg-white hover:bg-gray-50 shadow-md' : 'bg-white shadow-inner'}
+              relative overflow-hidden
               ${square ? `
-                shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]
+                shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]
                 before:absolute
                 before:inset-0
                 before:z-[-1]
@@ -301,12 +319,11 @@ const TicTacToe = () => {
                 before:translate-y-[2px]
                 before:rounded-lg
                 before:bg-gray-200
-                relative
               ` : ''}
-              ${square === 'X' ? 'text-indigo-600' : 
-                square === 'O' ? 'text-purple-600' : 
-                square === '△' ? 'text-green-600' : 
-                square === '□' ? 'text-orange-600' : ''
+              ${square === 'X' ? 'text-indigo-700 bg-indigo-50' : 
+                square === 'O' ? 'text-purple-700 bg-purple-50' : 
+                square === '△' ? 'text-green-700 bg-green-50' : 
+                square === '□' ? 'text-orange-700 bg-orange-50' : ''
               }`}
             onClick={() => handleClick(i)}
             disabled={gameState.winner !== null || Boolean(square)}
@@ -315,14 +332,6 @@ const TicTacToe = () => {
           </button>
         ))}
       </div>
-
-      <Button
-        onClick={resetGame}
-        className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700"
-      >
-        <RefreshCw className="h-4 w-4" />
-        <span>Restart Game</span>
-      </Button>
     </div>
   );
 };
