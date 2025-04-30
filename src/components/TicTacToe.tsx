@@ -321,8 +321,6 @@ const TicTacToe = () => {
               key={i}
               className={`${tileSize} text-4xl font-bold rounded-lg focus:outline-none transition-all transform hover:scale-105
                 ${!square ? 'bg-white hover:bg-gray-50 shadow-md' : 'bg-white shadow-inner'}
-                ${isWinningTile ? 'bg-green-200 hover:bg-green-200' : ''}
-                relative overflow-hidden
                 ${square ? `
                   shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]
                   before:absolute
@@ -338,7 +336,8 @@ const TicTacToe = () => {
                   square === '△' ? 'text-green-700 bg-green-50' : 
                   square === '□' ? 'text-orange-700 bg-orange-50' : ''
                 }
-                ${isWinningTile ? 'animate-pulse bg-green-300' : ''}`}
+                ${isWinningTile ? 'bg-green-300 animate-pulse border-2 border-green-500' : ''}
+                relative overflow-hidden`}
               onClick={() => handleClick(i)}
               disabled={gameState.winner !== null || Boolean(square)}
             >
