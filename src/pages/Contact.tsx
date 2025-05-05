@@ -29,7 +29,7 @@ const Contact = () => {
       // Send the email using EmailJS
       await emailjs.send(
         "service_bzeif7e",  // Your provided service ID
-        "template_contact_form", // Replace with your actual template ID
+        "template_x0jfsff", // Your provided template ID
         templateParams,
         "bHukafeo5Wf3ixH0M" // Your provided public key
       );
