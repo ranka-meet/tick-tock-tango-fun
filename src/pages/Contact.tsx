@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import emailjs from 'emailjs-com';
 import { Loader2 } from "lucide-react";
 
@@ -28,7 +28,7 @@ const Contact = () => {
       
       // Send the email using EmailJS
       await emailjs.send(
-        "service_contact_form",  // Replace with your actual service ID
+        "service_bzeif7e",  // Your provided service ID
         "template_contact_form", // Replace with your actual template ID
         templateParams,
         "YOUR_PUBLIC_KEY" // Replace with your actual EmailJS public key
