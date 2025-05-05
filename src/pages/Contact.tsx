@@ -28,10 +28,10 @@ const Contact = () => {
       
       // Send the email using EmailJS
       await emailjs.send(
-        "service_contact_form", // You'll need to create this service ID in EmailJS
-        "template_contact_form", // You'll need to create this template ID in EmailJS
+        "service_contact_form",  // Replace with your actual service ID
+        "template_contact_form", // Replace with your actual template ID
         templateParams,
-        "YOUR_USER_ID" // You'll need to provide your EmailJS user ID
+        "YOUR_PUBLIC_KEY" // Replace with your actual EmailJS public key
       );
       
       toast({
