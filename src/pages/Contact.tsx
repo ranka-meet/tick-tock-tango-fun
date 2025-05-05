@@ -31,7 +31,7 @@ const Contact = () => {
         "service_bzeif7e",  // Your provided service ID
         "template_contact_form", // Replace with your actual template ID
         templateParams,
-        "YOUR_PUBLIC_KEY" // Replace with your actual EmailJS public key
+        "bHukafeo5Wf3ixH0M" // Your provided public key
       );
       
       toast({
