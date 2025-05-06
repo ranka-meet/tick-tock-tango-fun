@@ -18,21 +18,25 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
+      // Initialize EmailJS with your user ID (public key)
+      emailjs.init("bHukafeo5Wf3ixH0M");
+      
       // EmailJS service configuration
       const templateParams = {
         name: formData.name,
         email: formData.email,
         message: formData.message,
-        to_email: "meetranka1442003@gmail.com", // Keeping this parameter if needed by your system
+        to_email: "meetranka1442003@gmail.com", // Keep this parameter if needed by your system
       };
       
-      // Send the email using EmailJS
-      await emailjs.send(
-        "service_bzeif7e",  // Your provided service ID
-        "template_x0jfsff", // Your provided template ID
-        templateParams,
-        "bHukafeo5Wf3ixH0M" // Your provided public key
+      // Send the email using EmailJS with updated parameters
+      const response = await emailjs.send(
+        "service_bzeif7e",  // Your service ID
+        "template_x0jfsff", // Your template ID
+        templateParams
       );
+      
+      console.log("Email sent successfully:", response);
       
       toast({
         title: "Message Sent",
