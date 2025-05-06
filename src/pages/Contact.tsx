@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import emailjs from 'emailjs-com';
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 
 const Contact = () => {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
@@ -18,25 +18,19 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      // Initialize EmailJS with your user ID (public key)
-      emailjs.init("bHukafeo5Wf3ixH0M");
-      
-      // EmailJS service configuration
-      const templateParams = {
-        name: formData.name,
-        email: formData.email,
-        message: formData.message,
-        to_email: "meetranka1442003@gmail.com", // Keep this parameter if needed by your system
-      };
-      
-      // Send the email using EmailJS with updated parameters
-      const response = await emailjs.send(
-        "service_bzeif7e",  // Your service ID
-        "template_x0jfsff", // Your template ID
-        templateParams
+      // Configure EmailJS with your service ID, template ID and user ID
+      const result = await emailjs.send(
+        "service_bzeif7e", 
+        "template_x0jfsff",
+        {
+          from_name: formData.name,
+          reply_to: formData.email,
+          message: formData.message,
+        },
+        "bHukafeo5Wf3ixH0M" // Your public key
       );
       
-      console.log("Email sent successfully:", response);
+      console.log("Email sent successfully:", result);
       
       toast({
         title: "Message Sent",
@@ -114,7 +108,10 @@ const Contact = () => {
                   Sending...
                 </>
               ) : (
-                "Send Message"
+                <>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Send Message
+                </>
               )}
             </Button>
           </form>
