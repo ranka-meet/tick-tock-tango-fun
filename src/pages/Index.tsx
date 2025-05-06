@@ -9,12 +9,6 @@ const Index = () => {
           <TicTacToe />
         </div>
       </main>
-      <aside className="hidden lg:block w-64 p-4">
-        {/* Ad space */}
-        <div className="bg-white/50 backdrop-blur-sm border border-gray-200 rounded-lg p-4 h-96">
-          <div className="text-center text-gray-400">Ad Space</div>
-        </div>
-      </aside>
     </div>
   );
 };
