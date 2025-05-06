@@ -20,10 +20,10 @@ const Contact = () => {
     try {
       // EmailJS service configuration
       const templateParams = {
-        from_name: formData.name,
-        from_email: formData.email,
-        to_email: "meetranka1442003@gmail.com",
+        name: formData.name,
+        email: formData.email,
         message: formData.message,
+        to_email: "meetranka1442003@gmail.com", // Keeping this parameter if needed by your system
       };
       
       // Send the email using EmailJS
